@@ -16,11 +16,11 @@ class BasicBlock(nn.Module):
         self.bn1 = nn.BatchNorm2d(in_planes)
         self.conv1 = nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(out_planes)
-        self.conv2 = nn.Conv2d(out_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(out_planes, out_planes, kernel_size=3, stride=1, padding=1, bias=False)
         self.drop_rate = drop_rate
         self.relu = F.relu
         self.equal_in_out = (in_planes==out_planes)
-        self.convShortcut = (not self.equal_in_out) and nn.Conv2d(in_planes, out_planes, kernel_size=1,stride=stride, bias=False) or None
+        self.convShortcut = (not self.equal_in_out) and nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False) or None
     
     def forward(self, x):
         if not self.equal_in_out:
@@ -50,22 +50,25 @@ class NetworkBlock(nn.Module):
         return self.layer(x)
     
 class WideResNet(nn.Module):
-    def __init__(self, depth, num_classes, widen_factor=1, drop_rate=0.0):
+    def __init__(self, depth, num_classes, widen_factor=1, drop_rate=0.0, mode='distil'):
         super(WideResNet, self).__init__()
         
+        self.mode = mode
         nChannels = [16, 16*widen_factor, 32*widen_factor, 64*widen_factor]
         assert((depth-4)%6==0)
         n = (depth-4)/6
         block = BasicBlock
         self.conv1 = nn.Conv2d(3, nChannels[0], kernel_size=3, stride=1, padding=1, bias=False)
         
-        self.block1 = NetworkBlock(n, nChannels[0],nChannels[1], block, 1, drop_rate)
-        self.block2 = NetworkBlock(n, nChannels[1],nChannels[2], block, 2, drop_rate)
-        self.block3 = NetworkBlock(n, nChannels[2],nChannels[3], block, 2, drop_rate)
+        self.block1 = NetworkBlock(n, nChannels[0], nChannels[1], block, 1, drop_rate)
+        self.block2 = NetworkBlock(n, nChannels[1], nChannels[2], block, 2, drop_rate)
+        self.block3 = NetworkBlock(n, nChannels[2], nChannels[3], block, 2, drop_rate)
         
         self.bn1 = nn.BatchNorm2d(nChannels[3])
         self.relu = nn.ReLU(inplace=True)
         self.fc = nn.Linear(nChannels[3], num_classes)
+        
+        self.last_ch = nChannels[3]
         
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -78,6 +81,7 @@ class WideResNet(nn.Module):
                 m.bias.data.zero_()
     
     def forward(self,x):
+        
         out = self.conv1(x)
         out = self.block1(out)
         act1 = out
@@ -85,11 +89,15 @@ class WideResNet(nn.Module):
         act2 = out
         out = self.block3(out)
         act3 = out
-        out = self.relu(self.bn1(out))
-        out = F.avg_pool2d(out,8)
-        out = out.view(-1, self.nChannels[3])
-        # logit and group 2,3,4
-        return self.fc(out), act1, act2, act3
+        
+        if self.mode == 'distil':
+            return act1, act2, act3
+        else:
+            out = self.relu(self.bn1(out))
+            out = F.avg_pool2d(out,8)
+            out = out.view(-1, self.last_ch)
+            # logit and group 2,3,4
+            return self.fc(out), act1, act2, act3
                 
         
         

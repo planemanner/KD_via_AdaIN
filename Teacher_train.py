@@ -13,72 +13,8 @@ from torchvision import datasets
 import torch.backends.cudnn as cudnn
 from torch.utils.data import DataLoader
 import torch.nn as nn
-from os import path
-import shutil
+from Utils import *
 
-def accuracy(output, target, topk=(1,)):
-    if len(target.shape)>1:
-        target = torch.argmax(target, dim=1)
-    
-    maxk = max(topk)
-    batch_size = target.size(0)
-    """
-    top k sorting
-    """
-    _, pred = output.topk(maxk, 1, True, True) 
-    pred = pred.t()
-    correct = pred.eq(target.view(1,-1).expand_as(pred))
-    res = []
-    
-    for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0)
-        res.append(correct_k.mul_(100/batch_size)) 
-    
-    return res
-
-class AverageMeter():
-    def __init__(self):
-        self.reset()
-    
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-    
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val*n
-        self.count += n
-        self.avg = self.sum/self.count
-        
-def evaluator(testloader, model):
-
-    top1 = AverageMeter()
-    top5 = AverageMeter()
-    
-    model.eval()
-    
-    with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(testloader):
-            inputs, targets = inputs.cuda(), targets.cuda()
-            outputs = model(inputs)
-            
-            prec1, prec5 = accuracy(outputs.data, targets.data, topk=(1,5))
-            
-            top1.update(prec1[0],inputs.size(0))
-            top5.update(prec5[0],inputs.size(0))
-    
-    model.train()
-    
-    return top1.avg, top5.avg
-            
-def save_ckpt(state, is_best, root_path = 'checkpoint', file_name = 'checkpoint.pth.tar'):
-    file_path = path.join(root_path, file_name)
-    torch.save(state, file_path)
-    if is_best:
-        shutil.copyfile(file_path, path.join(root_path,'model_best.pth.tar'))
-        
 def main(args):
     
     train_transform = transforms.Compose([transforms.ColorJitter(),
