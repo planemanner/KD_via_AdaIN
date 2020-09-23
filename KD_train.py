@@ -17,10 +17,13 @@ from os import path
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 
+"""
+Now, I am editing this code. Updated version will be coming soon.
+"""
 
 def main(args):
-    writer = SummaryWriter('./runs/CIFAR_100_exp')
-    
+    # writer = SummaryWriter('./runs/CIFAR_100_exp')
+     
     train_transform = transforms.Compose([transforms.Pad(4, padding_mode='reflect'),
                                           transforms.RandomRotation(15),
                                           transforms.RandomHorizontalFlip(),
@@ -107,9 +110,9 @@ def main(args):
         
         opt_scheduler.step()
         
-        writer.add_scalar('acc/top1', top1, epoch)
-        writer.add_scalar('acc/top5', top5, epoch)
-        writer.close()
+        # writer.add_scalar('acc/top1', top1, epoch)
+        # writer.add_scalar('acc/top5', top5, epoch)
+        # writer.close()
         
         
     print("Best top 1 acc: {}".format(best_acc))
