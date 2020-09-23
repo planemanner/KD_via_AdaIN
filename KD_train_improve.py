@@ -6,11 +6,14 @@ Created on Sat Aug 15 00:53:44 2020
 """
 
 """
+Following description is just an idea of mine...
+
 I will use batchnorm statistics.
 Why?-> Batch normalization gamma and beta map the feature to specific space.
 So if the space statistics of student is matched to the teacher's one, then we 
 can guide student to project in relatively 'good' space.
- 
+
+
 """
 
 
