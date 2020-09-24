@@ -5,7 +5,7 @@ Created on Thu Aug 13 11:48:49 2020
 @author: lky
 """
 
-from models import WideResNet
+from models import *
 import torch
 import argparse
 from torchvision import transforms
@@ -32,7 +32,13 @@ def main(args):
     train_loader = DataLoader(train_dataset, batch_size = args.batch_size, shuffle=True, num_workers=args.num_workers)
     test_loader = DataLoader(test_dataset, batch_size = args.batch_size, shuffle=False, num_workers=args.num_workers)         
     
-    Teacher = WideResNet(depth=args.depth, num_classes=100, widen_factor=args.width_factor, drop_rate=0.3)
+    if args.model_type == "WRN":
+        Teacher = WideResNet(depth=args.depth, num_classes=100, widen_factor=args.width_factor, drop_rate=0.3)
+    elif args.model_type == "ResNet-34":
+        Teacher = ResNet(BasicBlock, [3, 4, 6, 3], 100)
+    elif args.model_type == "ResNet-26":
+        Teacher = ResNet(Bottleneck, [2, 2, 2, 2], 100) 
+    
     Teacher.cuda()
     cudnn.benchmark = True
     optimizer = torch.optim.SGD(Teacher.parameters(), lr = args.lr, momentum=0.9, weight_decay=5e-4, nesterov=True)
@@ -85,6 +91,7 @@ if __name__=='__main__':
     parser.add_argument('--num_workers', type = int, default = 4)
     parser.add_argument('--depth', type = int, default = 40)
     parser.add_argument('--width_factor', type = int, default = 4)
+    parser.add_argument('--model_type', type = str, default = 'WRN')
     args = parser.parse_args()
     main(args)
     
