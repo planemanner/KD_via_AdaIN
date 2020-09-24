@@ -4,7 +4,7 @@ This repository is an implementation of *YANG, Jing, et al. **Knowledge distilla
 
 Naive implementation.
 
-# Reproduction of tables
+# Table
 | Teacher model | Student model | Scratch Teacher acc. | Scratch Student acc. | Student acc. |
 |:---:|:---:|---:|:---:|:---:|
 | WRN-40-4 | WRN-16-4 |  | | |
