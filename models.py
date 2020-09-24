@@ -80,7 +80,7 @@ class Bottleneck(nn.Module):
         return out
     
 class ResNet(nn.Module):
-    def __init__(self, depth, num_classes, drop_rate = 0.0):
+    def __init__(self, block, num_blocks, num_classes = 100):
         super(ResNet, self).__init__()
         
         self.conv1 = nn.Conv2d(3, 64, kernel_size = 3, stride=1, padding=1, bias=Fasle)
