@@ -45,7 +45,7 @@ def main(args):
     Teacher.eval()
     
     teacher_weight_path = path.join(args.teacher_root_path, 'model_best.pth.tar')
-    t_load = torch.load(teacher_weight_path)
+    t_load = torch.load(teacher_weight_path)['state_dict']
     Teacher.load_state_dict(t_load)
     
     Student = WideResNet(depth = args.student_depth, num_classes=100, widen_factor=args.student_width_factor, drop_rate=0.0)
@@ -63,7 +63,7 @@ def main(args):
     best_flag = False
     
     for epoch in range(args.total_epochs):
-        for iter_, (img, label) in enumerate(train_loader):
+        for iter_, data in enumerate(train_loader):
             images, labels = data
             images, labels = images.cuda(), labels.cuda()
             t_outs, *t_acts = Teacher(images)
